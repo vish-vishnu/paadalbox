@@ -30,6 +30,20 @@ function App() {
   const [shuffle, setShuffle] = useState(true);
   const [playlist, setPlaylist] = useState([]);
 
+  useEffect(() => {
+    
+    const audio = audioRef.current;
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+    }
+  }, []);
+
   const handlePlayPause = () => {
     if (!currentSong) return;
     if (playing) {
@@ -42,7 +56,7 @@ function App() {
   const handleNextsong = () => {
     if (!playlist.length) return;
     if (!currentSong) return;
-    if(audioRef.current){
+    if (audioRef.current) {
       audioRef.current.pause();
       setPlaying(false);
     }
@@ -58,7 +72,7 @@ function App() {
     playsong(nextsong._id);
   }
   const handlePrevioussong = () => {
-    if(audioRef.current){
+    if (audioRef.current) {
       audioRef.current.pause();
       setPlaying(false);
     }
@@ -115,15 +129,15 @@ function App() {
     const url = `https://paadalbox.onrender.com/stream/${_id}`
     setCurrentSong({ url, _id });
     setProgress(0);
-    if(audioRef.current){
+    if (audioRef.current) {
       audioRef.current.pause();
     }
     audioRef.current.src = url;
     audioRef.current.load();
-    audioRef.current.oncanplay=()=>{
+    audioRef.current.oncanplay = () => {
       setPlaying(true);
       audioRef.current.play()
-        .catch(err=>console.log("play Interrepted",err)
+        .catch(err => console.log("play Interrepted", err)
         );
     }
   }
@@ -140,8 +154,25 @@ function App() {
   useEffect(() => {
     if (playlist.length > 0 && !currentSong) {
       const firstSong = playlist[Math.floor(Math.random() * playlist.length)];
-      if(!playing)
-      playsong(firstSong._id);
+      if (!playing)
+        playsong(firstSong._id);
+    }
+    if ("mediaSession" in navigator && currentSong) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: playlist.find(s => s._id === currentSong._id)?.name,
+        artist: playlist.find(s => s._id === currentSong._id)?.artist || "",
+        artwork: [{ src: "cover.png", sizes: "512x512", type: "image/png" }]
+      });
+    }
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.setActionHandler("play", () => {
+        audioRef.current.play();
+      });
+      navigator.mediaSession.setActionHandler("pause", () => {
+        audioRef.current.pause();
+      });
+      navigator.mediaSession.setActionHandler("previoustrack", handlePrevioussong);
+      navigator.mediaSession.setActionHandler("nexttrack", handleNextsong);
     }
   }, [playlist, currentSong]);
 
@@ -162,7 +193,7 @@ function App() {
       <div className='App' >
         <div className="logo">
           <h1>Paadal<span>box</span></h1>
-          <button className='playlist-btn' onClick={()=>setPlaylistVisible(!playlistVisible)}>
+          <button className='playlist-btn' onClick={() => setPlaylistVisible(!playlistVisible)}>
             <img src={playlistVisible ? close_btn : playlist_btn} alt="" />
           </button>
         </div>
@@ -172,12 +203,12 @@ function App() {
         </div>}
         {playlistVisible && (<div className="playlist">
           <div className="searchbar">
-          <input type="text" placeholder='Search for songs, artists, albums...' />
-          <button>
-            <img src={search_icon}
-              className='search-icon' />
-          </button>
-        </div>
+            <input type="text" placeholder='Search for songs, artists, albums...' />
+            <button>
+              <img src={search_icon}
+                className='search-icon' />
+            </button>
+          </div>
           <ul>
             {playlist.map((song, index) => (
               <li onClick={() => playsong(song._id)} key={index}>
@@ -186,17 +217,17 @@ function App() {
             ))}
           </ul>
         </div>)}
-        
+
         <div className="playing-img">
           <img src={playing_img} className={`img ${playing ? "spin" : ""}`} />
         </div>
-        
-        <audio type="audio/mp3" 
-        ref={audioRef} 
-        onTimeUpdate={handleTimeUpdate} 
-        onLoadedMetadata={handleLoadedMetadata} 
-        onEnded={handleNextsong}> 
-          
+
+        <audio type="audio/mp3"
+          ref={audioRef}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={handleNextsong}>
+
         </audio>
         <div className="progress-bar">
           <input type="range" min="0" max="100" value={progress} onChange={handleProgressChange} />
