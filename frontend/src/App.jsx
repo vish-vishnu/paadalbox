@@ -154,8 +154,12 @@ function App() {
   useEffect(() => {
     if (playlist.length > 0 && !currentSong) {
       const firstSong = playlist[Math.floor(Math.random() * playlist.length)];
-      if (!playing)
-        playsong(firstSong._id);
+      if (!playing) {
+        const url = `https://paadalbox.onrender.com/stream/${firstSong._id}`;
+        setCurrentSong({ url, _id: firstSong._id });
+        audioRef.current.src = url;
+        audioRef.current.load();
+      }
     }
     if ("mediaSession" in navigator && currentSong) {
       navigator.mediaSession.metadata = new MediaMetadata({
