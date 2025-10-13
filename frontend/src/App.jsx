@@ -111,7 +111,7 @@ function App() {
     };
   }, [playing, currentSong]);
   const playsong = (_id) => {
-    const url = `http://localhost:3000/stream/${_id}`
+    const url = `https://paadalbox.onrender.com/stream/${_id}`
 
     setCurrentSong({ url, _id });
     setProgress(0);
@@ -146,11 +146,11 @@ function App() {
   }, [playlist, currentSong]);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/playlist")
+    axios.get("https://paadalbox.onrender.com/playlist")
       .then(res => {
         setPlaylist(res.data);
         console.log("song Fetched", res.data)
-        // console.log(playlist);
+        console.log(playlist);
 
       })
       .catch(error => console.error("Error Fetching playlist", error)
