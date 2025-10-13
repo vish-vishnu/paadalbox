@@ -71,7 +71,7 @@ app.get("/driveId-get",async(req,res)=>{
             return res.status(404).send("No files found in your playlist");
         }
 
-        const client= new MongoClient(mongoURL);
+        
         await client.connect();
         const db= client.db(dbName);
         const collection=db.collection(collectionName);
