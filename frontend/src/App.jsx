@@ -111,12 +111,8 @@ function App() {
     };
   }, [playing, currentSong]);
   const playsong = (_id) => {
-<<<<<<< HEAD
-    const url = `https://paadalbox.onrender.com/stream/${_id}`
-=======
-    const url = `/stream/${_id}`
->>>>>>> 0e47f18d2aa3e6db30fd4c4c1ea05e5a9c314452
 
+    const url = `https://paadalbox.onrender.com/stream/${_id}`
     setCurrentSong({ url, _id });
     setProgress(0);
     if(audioRef.current){
