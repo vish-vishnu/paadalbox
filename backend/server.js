@@ -15,7 +15,10 @@ const PORT=process.env.PORT || 3000;
 const CREDENTIALS = JSON.parse(fs.readFileSync("credentials.json"));
 
 const auth = new google.auth.GoogleAuth({
-    credentials: CREDENTIALS,
+    credentials: {
+        client_email: process.env.GOOGLE_URI,
+        private_key: process.env.PRODUCT_KEY.replace(/\\n/g, "\n"),
+    },
     scopes: ["https://www.googleapis.com/auth/drive.readonly"],
 });
 
