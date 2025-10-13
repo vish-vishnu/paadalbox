@@ -99,7 +99,7 @@ h1 span {
 }
 .playlist {
   
-  max-height: 56vh;
+  max-height: 35vh;
   position: absolute;
   overflow: hidden;
   overflow-y:scroll;
@@ -109,6 +109,7 @@ h1 span {
   border: 1px solid aqua;
   border-radius: 5px;
   z-index: 2;
+  margin-right: 10px;
 }
 .playlist li {
   cursor: pointer;
