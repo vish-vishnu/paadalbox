@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, use } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import axios from "axios";
 import './App.css'
 import playing_img from './assets/playing-img.png'
@@ -14,35 +14,43 @@ import repeateOff_btn from './assets/repeateoff.png'
 import repeateAll_btn from './assets/repeateall.png'
 import repeateOne_btn from './assets/repeateone.png'
 import close_btn from './assets/close.png'
-import volume_icon from './assets/volume-up.png'
 
 function App() {
-  [
-  ];
+  useEffect(() => {
+    axios.get("https://paadalbox.onrender.com/playlist")
+      .then(res => {
+        setPlaylist(res.data);
+        console.log("song Fetched");
+
+      })
+      .catch(error => console.error("Error Fetching playlist", error)
+      );
+  }, []);
+
+  useEffect(() => {
+    if (playlist.length > 0 && !currentSong) {
+      const firstSong = playlist[Math.floor(Math.random() * playlist.length)];
+      if (!playing) {
+        const url = `https://paadalbox.onrender.com/stream/${firstSong._id}`;
+        setCurrentSong({ url, _id: firstSong._id });
+        audioRef.current.crossOrigin = "anonymous";
+        audioRef.current.src = url;
+        audioRef.current.load();
+      }
+    }
+  }, [playlist, currentSong]);
+
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [songDuration, setSongDuration] = useState("00:00");
-  const [currentTime, setCurrentTime] = useState("00:00");
+  const [songDuration, setSongDuration] = useState("0:00");
+  const [currentTime, setCurrentTime] = useState("0:00");
   const [repeatMode, setRepeatMode] = useState("");
   const [playlistVisible, setPlaylistVisible] = useState(false);
   const [currentSong, setCurrentSong] = useState(null);
   const [shuffle, setShuffle] = useState(true);
   const [playlist, setPlaylist] = useState([]);
 
-  useEffect(() => {
-    
-    const audio = audioRef.current;
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-
-    audio.addEventListener("play", onPlay);
-    audio.addEventListener("pause", onPause);
-    return () => {
-      audio.removeEventListener("play", onPlay);
-      audio.removeEventListener("pause", onPause);
-    }
-  }, []);
 
   const handlePlayPause = () => {
     if (!currentSong) return;
@@ -131,12 +139,14 @@ function App() {
     setProgress(0);
     if (audioRef.current) {
       audioRef.current.pause();
+      setPlaying(false);
     }
+    audioRef.current.crossOrigin = "anonymous";
     audioRef.current.src = url;
     audioRef.current.load();
     audioRef.current.oncanplay = () => {
-      setPlaying(true);
       audioRef.current.play()
+        .then(() => setPlaying(true))
         .catch(err => console.log("play Interrepted", err)
         );
     }
@@ -151,46 +161,6 @@ function App() {
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
   };
-  useEffect(() => {
-    if (playlist.length > 0 && !currentSong) {
-      const firstSong = playlist[Math.floor(Math.random() * playlist.length)];
-      if (!playing) {
-        const url = `https://paadalbox.onrender.com/stream/${firstSong._id}`;
-        setCurrentSong({ url, _id: firstSong._id });
-        audioRef.current.src = url;
-        audioRef.current.load();
-      }
-    }
-    if ("mediaSession" in navigator && currentSong) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: playlist.find(s => s._id === currentSong._id)?.name,
-        artist: playlist.find(s => s._id === currentSong._id)?.artist || "",
-        artwork: [{ src: "cover.png", sizes: "512x512", type: "image/png" }]
-      });
-    }
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.setActionHandler("play", () => {
-        audioRef.current.play();
-      });
-      navigator.mediaSession.setActionHandler("pause", () => {
-        audioRef.current.pause();
-      });
-      navigator.mediaSession.setActionHandler("previoustrack", handlePrevioussong);
-      navigator.mediaSession.setActionHandler("nexttrack", handleNextsong);
-    }
-  }, [playlist, currentSong]);
-
-  useEffect(() => {
-    axios.get("https://paadalbox.onrender.com/playlist")
-      .then(res => {
-        setPlaylist(res.data);
-        console.log("song Fetched", res.data)
-        console.log(playlist);
-
-      })
-      .catch(error => console.error("Error Fetching playlist", error)
-      );
-  }, []);
 
   return (
     <>
@@ -234,7 +204,14 @@ function App() {
 
         </audio>
         <div className="progress-bar">
-          <input type="range" min="0" max="100" value={progress} onChange={handleProgressChange} />
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={progress}
+            onChange={handleProgressChange}
+          />
+
         </div>
         <div className='time-stamps'>
           <span>{currentTime}</span>
