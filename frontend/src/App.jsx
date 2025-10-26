@@ -16,30 +16,8 @@ import repeateOne_btn from './assets/repeateone.png'
 import close_btn from './assets/close.png'
 
 function App() {
-  useEffect(() => {
-    axios.get("https://paadalbox.onrender.com/playlist")
-      .then(res => {
-        setPlaylist(res.data);
-        console.log("song Fetched");
-
-      })
-      .catch(error => console.error("Error Fetching playlist", error)
-      );
-  }, []);
-
-  useEffect(() => {
-    if (playlist.length > 0 && !currentSong) {
-      const firstSong = playlist[Math.floor(Math.random() * playlist.length)];
-      if (!playing) {
-        const url = `https://paadalbox.onrender.com/stream/${firstSong._id}`;
-        setCurrentSong({ url, _id: firstSong._id });
-        audioRef.current.crossOrigin = "anonymous";
-        audioRef.current.src = url;
-        audioRef.current.load();
-      }
-    }
-  }, [playlist, currentSong]);
-
+  
+  
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -50,8 +28,8 @@ function App() {
   const [currentSong, setCurrentSong] = useState(null);
   const [shuffle, setShuffle] = useState(true);
   const [playlist, setPlaylist] = useState([]);
-
-
+  
+  
   const handlePlayPause = () => {
     if (!currentSong) return;
     if (playing) {
@@ -91,16 +69,16 @@ function App() {
   }
   const handleShuffleBtn = () => {
     setShuffle(!shuffle);
-
+    
   }
   const handleTimeUpdate = () => {
     const current = audioRef.current.currentTime;
     const duration = audioRef.current.duration;
-
+    
     if (!duration || isNaN(duration)) return;
     setCurrentTime(formatTime(current));
     setProgress((current / duration) * 100);
-
+    
   }
   const handleProgressChange = (e) => {
     const value = e.target.value;
@@ -133,7 +111,7 @@ function App() {
     };
   }, [playing, currentSong]);
   const playsong = (_id) => {
-
+    
     const url = `https://paadalbox.onrender.com/stream/${_id}`
     setCurrentSong({ url, _id });
     setProgress(0);
@@ -146,21 +124,45 @@ function App() {
     audioRef.current.load();
     audioRef.current.oncanplay = () => {
       audioRef.current.play()
-        .then(() => setPlaying(true))
-        .catch(err => console.log("play Interrepted", err)
-        );
+      .then(() => setPlaying(true))
+      .catch(err => console.log("play Interrepted", err)
+    );
+  }
+}
+const handleLoadedMetadata = () => {
+  const duration = audioRef.current.duration;
+  setSongDuration(formatTime(duration));
+};
+const formatTime = (time) => {
+  if (!time || isNaN(time)) return "00:00";
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+};
+
+useEffect(() => {
+  axios.get("https://paadalbox.onrender.com/playlist")
+  .then(res => {
+    setPlaylist(res.data);
+    console.log("song Fetched");
+    
+  })
+  .catch(error => console.error("Error Fetching playlist", error)
+);
+}, []);
+
+useEffect(() => {
+  if (playlist.length > 0 && !currentSong) {
+    const firstSong = playlist[Math.floor(Math.random() * playlist.length)];
+    if (!playing) {
+      const url = `https://paadalbox.onrender.com/stream/${firstSong._id}`;
+      setCurrentSong({ url, _id: firstSong._id });
+      audioRef.current.crossOrigin = "anonymous";
+      audioRef.current.src = url;
+      audioRef.current.load();
     }
   }
-  const handleLoadedMetadata = () => {
-    const duration = audioRef.current.duration;
-    setSongDuration(formatTime(duration));
-  };
-  const formatTime = (time) => {
-    if (!time || isNaN(time)) return "00:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-  };
+}, [playlist, currentSong]);
 
   return (
     <>
